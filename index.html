@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreatMatrix - CVSS v3.1 Calculator & Vulnerability Dashboard</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="ThreatMatrix by dharmendrastm - Professional CVSS v3.1 Calculator and Vulnerability Dashboard for penetration testing, bug bounty hunting, and security research. Created by Dharmendra Kumar (dharmendrahacker, dharmendracyberhack).">
+    <meta name="keywords" content="ThreatMatrix, dharmendrastm, dharmendrahacker, dharmendracyberhack, dharmendra kumar, CVSS calculator, CVSS v3.1, vulnerability assessment, security research, penetration testing, bug bounty, ethical hacking, vulnerability scanner, security audit, cyber security tools, CVSS scoring, risk assessment">
+    <meta name="author" content="Dharmendra Kumar (dharmendrastm)">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- html2canvas CDN for screenshot export -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    
+    <style>
+        /* ================================
+           Global Styles & Reset
+        ================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Dark Theme Colors */
+            --bg-primary: #0a0e27;
+            --bg-secondary: #1a1f3a;
+            --bg-card: rgba(26, 31, 58, 0.8);
+            
+            /* Neon Colors */
+            --neon-blue: #00d4ff;
+            --neon-purple: #b620e0;
+            --neon-green: #39ff14;
+            --neon-red: #ff073a;
+            --neon-yellow: #ffea00;
+            
+            /* Severity Colors */
+            --info: #17a2b8;
+            --low: #28a745;
+            --medium: #ffc107;
+            --high: #fd7e14;
+            --critical: #dc3545;
+            
+            /* Text */
+            --text-primary: #e0e6ed;
+            --text-secondary: #a8b2d1;
+            
+            /* Glassmorphism */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #0f1535 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ================================
+           Top Header Navigation
+        ================================ */
+        .top-header {
+            background: linear-gradient(90deg, rgba(10, 14, 39, 0.98) 0%, rgba(15, 21, 53, 0.98) 100%);
+            border-bottom: 3px solid var(--neon-blue);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        .top-header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .brand-text h1 {
+            font-size: 1.8rem;
+            color: var(--neon-blue);
+            margin: 0;
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .top-nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .top-nav a {
+            padding: 10px 20px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 2px solid var(--neon-blue);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .top-nav a:hover {
+            background: var(--neon-blue);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        /* ================================
+           Navigation Tabs
+        ================================ */
+        .nav-container {
+            background: rgba(10, 14, 39, 0.95);
+            border-bottom: 2px solid var(--neon-blue);
+            padding: 0;
+            position: sticky;
+            top: 93px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tabs {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            list-style: none;
+        }
+
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-tab button {
+            width: 100%;
+            padding: 20px 30px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-tab button:hover {
+            color: var(--neon-blue);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .nav-tab button.active {
+            color: var(--neon-blue);
+            border-bottom: 3px solid var(--neon-blue);
+            background: rgba(0, 212, 255, 0.1);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        /* ================================
+           Page Container
+        ================================ */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* ================================
+           Section Visibility
+        ================================ */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ================================
+           Header
+        ================================ */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: var(--glass-bg);
+            border: 2px solid var(--neon-blue);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header .version {
+            color: var(--neon-green);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .disclaimer {
+            color: var(--neon-yellow);
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 234, 0, 0.1);
+            border-radius: 8px;
+            border: 1px solid var(--neon-yellow);
+        }
+
+        /* ================================
+           Panel Styling
+        ================================ */
+        .panel {
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .panel h2 {
+            color: var(--neon-blue);
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .panel h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        /* ================================
+           CVSS Metric Groups (Button Style)
+        ================================ */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .metric-group {
+            margin-bottom: 25px;
+        }
+
+        .metric-label {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .metric-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .metric-btn {
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .metric-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--neon-blue);
+            color: var(--text-primary);
+        }
+
+        .metric-btn.selected {
+            background: #00acc1;
+            border-color: #00acc1;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(0, 172, 193, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* ================================
+           Action Buttons
+        ================================ */
+        .btn {
+            padding: 12px 25px;
+            border: 2px solid;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 5px;
+        }
+
+        .btn-calculate {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border-color: var(--neon-blue);
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-calculate:hover {
+            box-shadow: 0 0 20px var(--neon-blue);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 20px #667eea;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: transparent;
+            border-color: var(--neon-red);
+            color: var(--neon-red);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 7, 58, 0.1);
+            box-shadow: 0 0 20px var(--neon-red);
+        }
+
+        .btn-info {
+            background: transparent;
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+        }
+
+        .btn-info:hover {
+            background: rgba(0, 212, 255, 0.1);
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        .btn-success {
+            background: transparent;
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .btn-success:hover {
+            background: rgba(57, 255, 20, 0.1);
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .btn-download {
+            background: transparent;
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
+        .btn-download:hover {
+            background: rgba(57, 255, 20, 0.1);
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-red));
+            border-color: var(--neon-purple);
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            width: 100%;
+        }
+
+        .btn-export:hover {
+            box-shadow: 0 0 25px var(--neon-purple);
+            transform: translateY(-2px);
+        }
+
+        /* ================================
+           CVSS Result Card
+        ================================ */
+        .cvss-result {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .cvss-result.hidden {
+            display: none;
+        }
+
+        .score-display {
+            margin-bottom: 15px;
+        }
+
+        .score-number {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .score-label {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .severity-badge.none {
+            background: var(--info);
+            box-shadow: 0 0 20px var(--info);
+        }
+
+        .severity-badge.low {
+            background: var(--low);
+            box-shadow: 0 0 20px var(--low);
+        }
+
+        .severity-badge.medium {
+            background: #dc3545;
+            color: white;
+            box-shadow: 0 0 20px #dc3545;
+        }
+
+        .severity-badge.high {
+            background: var(--high);
+            box-shadow: 0 0 20px var(--high);
+        }
+
+        .severity-badge.critical {
+            background: var(--critical);
+            box-shadow: 0 0 20px var(--critical);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px var(--critical);
+            }
+            50% {
+                box-shadow: 0 0 40px var(--critical);
+            }
+        }
+
+        .risk-message {
+            color: var(--text-secondary);
+            margin-top: 10px;
+            font-size: 1rem;
+        }
+
+        .cvss-vector {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--neon-green);
+            word-break: break-all;
+            position: relative;
+        }
+
+        .copy-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-copy {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-copy:hover {
+            background: rgba(57, 255, 20, 0.1);
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+
+        .btn-copy.copied {
+            background: var(--neon-green);
+            color: #000;
+        }
+
+        /* ================================
+           Dashboard Components
+        ================================ */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .input-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .input-row label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .input-row input {
+            width: 80px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .input-row input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .severity-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .severity-dot.info { background: var(--info); }
+        .severity-dot.low { background: var(--low); }
+        .severity-dot.medium { background: var(--medium); }
+        .severity-dot.high { background: var(--high); }
+        .severity-dot.critical { background: var(--critical); }
+
+        .totals-display {
+            background: rgba(0, 212, 255, 0.1);
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .total-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-label {
+            font-weight: 600;
+            color: var(--neon-blue);
+        }
+
+        .total-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--neon-green);
+        }
+
+        .percentage-breakdown {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .percentage-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .percentage-item:last-child {
+            border-bottom: none;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .graphs-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+
+        .graph-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            min-height: 550px;
+        }
+
+        .graph-box canvas {
+            margin: 20px 0;
+            max-height: 450px;
+            min-height: 400px;
+        }
+
+        .legend-items {
+            margin-bottom: 25px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .legend-color.info { background: var(--info); }
+        .legend-color.low { background: var(--low); }
+        .legend-color.medium { background: var(--medium); }
+        .legend-color.high { background: var(--high); }
+        .legend-color.critical { background: var(--critical); }
+
+        .risk-indicator {
+            text-align: center;
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.3rem;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: var(--glass-bg);
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+        }
+
+        .export-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid var(--glass-border);
+        }
+
+        .screenshot-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* ================================
+           Visitor Counter
+        ================================ */
+        .visitor-counter {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--glass-bg);
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+            padding: 10px 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .visitor-counter .icon {
+            font-size: 1.2rem;
+        }
+
+        .visitor-counter .count {
+            color: var(--neon-green);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .visitor-counter .label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* ================================
+           Footer
+        ================================ */
+        .footer {
+            margin-top: 60px;
+            padding: 60px 20px 30px;
+            background: linear-gradient(180deg, rgba(10, 14, 39, 0.95) 0%, rgba(15, 21, 53, 0.98) 100%);
+            border-top: 3px solid var(--neon-blue);
+            backdrop-filter: blur(10px);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section h3 {
+            color: var(--neon-blue);
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-section p {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        .footer-links-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-links-list li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links-list a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .footer-links-list a:hover {
+            color: var(--neon-blue);
+            transform: translateX(5px);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 212, 255, 0.1);
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+            color: var(--neon-blue);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .social-icons a img {
+            width: 24px;
+            height: 24px;
+            filter: brightness(0) saturate(100%) invert(70%) sepia(98%) saturate(2476%) hue-rotate(169deg) brightness(104%) contrast(101%);
+            transition: all 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            background: var(--neon-blue);
+            color: #000;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .social-icons a:hover img {
+            filter: brightness(0) saturate(100%);
+        }
+
+        .footer-tags {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .footer-tags p {
+            font-size: 0.85rem;
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        .footer-tags strong {
+            color: var(--neon-blue);
+        }
+
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .footer-bottom p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin: 10px 0;
+        }
+
+        .footer-bottom strong {
+            color: var(--neon-blue);
+        }
+
+        .footer-bottom-links {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .footer-bottom-links a {
+            color: var(--neon-blue);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-bottom-links a:hover {
+            color: var(--neon-purple);
+        }
+
+        /* ================================
+           Responsive Design
+        ================================ */
+        @media (max-width: 768px) {
+            .top-header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .top-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .top-nav a {
+                font-size: 0.85rem;
+                padding: 8px 15px;
+            }
+
+            .brand-text h1 {
+                font-size: 1.4rem;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .social-icons {
+                justify-content: center;
+            }
+
+            .footer-bottom-links {
+                font-size: 0.85rem;
+            }
+
+            .nav-container {
+                top: 0;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .graphs-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .copy-buttons {
+                flex-direction: column;
+            }
+
+            .screenshot-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .score-number {
+                font-size: 3rem;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <div class="top-header-content">
+            <div class="brand">
+                <div class="brand-icon">🛡️</div>
+                <div class="brand-text">
+                    <h1>THREATMATRIX</h1>
+                    <p>Security Research Platform</p>
+                </div>
+            </div>
+            <nav class="top-nav">
+                <a href="https://dharmendrastm.github.io/PortfolioWebsite/" target="_blank">🌐 Portfolio</a>
+                <a href="https://github.com/Dharmendrastm" target="_blank">💻 GitHub</a>
+                <a href="https://dharmendrastm.github.io/SurfaceHunter/" target="_blank">🔍 Surface Hunter</a>
+                <a href="https://www.linkedin.com/in/dharmendrastm/" target="_blank">💼 Connect</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-container">
+        <ul class="nav-tabs">
+            <li class="nav-tab">
+                <button class="active" onclick="switchSection('cvss')">
+                    🔐 CVSS Calculator
+                </button>
+            </li>
+            <li class="nav-tab">
+                <button onclick="switchSection('dashboard')">
+                    📊 Vulnerability Dashboard
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="container">
+        <!-- ================================
+             SECTION 1: CVSS CALCULATOR
+        ================================ -->
+        <div id="cvss-section" class="section active">
+            <div class="header">
+                <h1>🔐 ThreatMatrix - CVSS v3.1 Calculator</h1>
+                <p class="version">✓ Official CVSS v3.1 Scoring Algorithm</p>
+                <p class="disclaimer">⚠️ This tool is for educational and authorized security testing only.</p>
+            </div>
+
+            <div class="panel">
+                <h2>📊 Base Score Metrics</h2>
+                <p style="text-align: right; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 5px;">
+                    Select values for all base metrics to generate score
+                </p>
+                <p style="text-align: right; color: var(--neon-green); font-size: 0.85rem; margin-bottom: 20px; font-weight: 600;">
+                    <span id="metricsSelected">0</span>/8 metrics selected | Total Score: <span id="totalScorePreview">0.0</span>/10.0
+                </p>
+
+                <div class="metric-grid">
+                    <!-- Left Column -->
+                    <div>
+                        <div class="metric-group">
+                            <label class="metric-label">Attack Vector (AV)</label>
+                            <div class="metric-buttons">
+                                <button class="metric-btn" data-metric="AV" data-value="N" onclick="selectMetric('AV', 'N', this)">Network (N)</button>
+                                <button class="metric-btn" data-metric="AV" data-value="A" onclick="selectMetric('AV', 'A', this)">Adjacent (A)</button>
+                                <button class="metric-btn" data-metric="AV" data-value="L" onclick="selectMetric('AV', 'L', this)">Local (L)</button>
+                                <button class="metric-btn" data-metric="AV" data-value="P" onclick="selectMetric('AV', 'P', this)">Physical (P)</button>
+                            </div>
+                        </div>
+
+                        <div class="metric-group">
+                            <label class="metric-label">Attack Complexity (AC)</label>
+                            <div class="metric-buttons">
+                                <button class="metric-btn" data-metric="AC" data-value="L" onclick="selectMetric('AC', 'L', this)">Low (L)</button>
+                                <button class="metric-btn" data-metric="AC" data-value="H" onclick="selectMetric('AC', 'H', this)">High (H)</button>
+                            </div>
+                        </div>
+
+                        <div class="metric-group">
+                            <label class="metric-label">Privileges Required (PR)</label>
+                            <div class="metric-buttons">
+                                <button class="metric-btn" data-metric="PR" data-value="N" onclick="selectMetric('PR', 'N', this)">None (N)</button>
+                                <button class="metric-btn" data-metric="PR" data-value="L" onclick="selectMetric('PR', 'L', this)">Low (L)</button>
+                                <button class="metric-btn" data-metric="PR" data-value="H" onclick="selectMetric('PR', 'H', this)">High (H)</button>
+                            </div>
+                        </div>
+
+                        <div class="metric-group">
+                            <label class="metric-label">User Interaction (UI)</label>
+                            <div class="metric-buttons">
+                                <button class="metric-btn" data-metric="UI" data-value="N" onclick="selectMetric('UI', 'N', this)">None (N)</button>
+                                <button class="metric-btn" data-metric="UI" data-value="R" onclick="selectMetric('UI', 'R', this)">Required (R)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <div class="metric-group">
+                            <label class="metric-label">Scope (S)</label>
+                            <div class="metric-buttons">
+                                <button class="metric-btn" data-metric="S" data-value="U" onclick="selectMetric('S', 'U', this)">Unchanged (U)</button>
+                                <button class="metric-btn" data-metric="S" data-value="C" onclick="selectMetric('S', 'C', this)">Changed (C)</button>
+                            </div>
+                        </div>
+
+                        <div class="metric-group">
+                            <label class="metric-label">Confidentiality (C)</label>
+                            <div class="metric-buttons">
+                                <button class="metric-btn" data-metric="C" data-value="N" onclick="selectMetric('C', 'N', this)">None (N)</button>
+                                <button class="metric-btn" data-metric="C" data-value="L" onclick="selectMetric('C', 'L', this)">Low (L)</button>
+                                <button class="metric-btn" data-metric="C" data-value="H" onclick="selectMetric('C', 'H', this)">High (H)</button>
+                            </div>
+                        </div>
+
+                        <div class="metric-group">
+                            <label class="metric-label">Integrity (I)</label>
+                            <div class="metric-buttons">
+                                <button class="metric-btn" data-metric="I" data-value="N" onclick="selectMetric('I', 'N', this)">None (N)</button>
+                                <button class="metric-btn" data-metric="I" data-value="L" onclick="selectMetric('I', 'L', this)">Low (L)</button>
+                                <button class="metric-btn" data-metric="I" data-value="H" onclick="selectMetric('I', 'H', this)">High (H)</button>
+                            </div>
+                        </div>
+
+                        <div class="metric-group">
+                            <label class="metric-label">Availability (A)</label>
+                            <div class="metric-buttons">
+                                <button class="metric-btn" data-metric="A" data-value="N" onclick="selectMetric('A', 'N', this)">None (N)</button>
+                                <button class="metric-btn" data-metric="A" data-value="L" onclick="selectMetric('A', 'L', this)">Low (L)</button>
+                                <button class="metric-btn" data-metric="A" data-value="H" onclick="selectMetric('A', 'H', this)">High (H)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-calculate" onclick="calculateCVSS()">Calculate CVSS v3.1 Score</button>
+
+                <div id="cvssResult" class="cvss-result hidden">
+                    <div class="score-display">
+                        <span class="score-number" id="scoreNumber">0.0</span>
+                        <span class="score-label">/10.0</span>
+                    </div>
+                    <div class="severity-badge" id="severityBadge">Unknown</div>
+                    <p class="risk-message" id="riskMessage">Calculate to see risk assessment</p>
+                    <div class="cvss-vector" id="cvssVector">CVSS:3.1/AV:_/AC:_/PR:_/UI:_/S:_/C:_/I:_/A:_</div>
+                    
+                    <!-- Copy Buttons -->
+                    <div class="copy-buttons">
+                        <button class="btn-copy" onclick="copyCVSSScore()">
+                            📋 Copy CVSS Score
+                        </button>
+                        <button class="btn-copy" onclick="screenshotCVSSResult()">
+                            📸 Screenshot Result
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================
+             SECTION 2: DASHBOARD
+        ================================ -->
+        <div id="dashboard-section" class="section">
+            <div class="header">
+                <h1>📊 ThreatMatrix - Vulnerability Dashboard</h1>
+                <p class="disclaimer">⚠️ Enter vulnerability counts and generate visual reports</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="panel">
+                    <h2>📝 Vulnerability Count Input</h2>
+                    
+                    <div class="severity-inputs">
+                        <div class="input-row">
+                            <label for="infoCount">
+                                <span class="severity-dot info"></span>
+                                Informational
+                            </label>
+                            <input type="number" id="infoCount" min="0" value="0" onchange="updateTotals()">
+                        </div>
+
+                        <div class="input-row">
+                            <label for="lowCount">
+                                <span class="severity-dot low"></span>
+                                Low
+                            </label>
+                            <input type="number" id="lowCount" min="0" value="0" onchange="updateTotals()">
+                        </div>
+
+                        <div class="input-row">
+                            <label for="mediumCount">
+                                <span class="severity-dot medium"></span>
+                                Medium
+                            </label>
+                            <input type="number" id="mediumCount" min="0" value="0" onchange="updateTotals()">
+                        </div>
+
+                        <div class="input-row">
+                            <label for="highCount">
+                                <span class="severity-dot high"></span>
+                                High
+                            </label>
+                            <input type="number" id="highCount" min="0" value="0" onchange="updateTotals()">
+                        </div>
+
+                        <div class="input-row">
+                            <label for="criticalCount">
+                                <span class="severity-dot critical"></span>
+                                Critical
+                            </label>
+                            <input type="number" id="criticalCount" min="0" value="0" onchange="updateTotals()">
+                        </div>
+                    </div>
+
+                    <div class="totals-display">
+                        <div class="total-item">
+                            <span class="total-label">Total Vulnerabilities:</span>
+                            <span class="total-value" id="totalVulns">0</span>
+                        </div>
+                    </div>
+
+                    <div class="percentage-breakdown" id="percentageBreakdown">
+                        <p style="text-align: center; color: var(--text-secondary);">No data yet</p>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="generateGraphs()">📊 Generate</button>
+                        <button class="btn btn-danger" onclick="resetDashboard()">🔄 Reset</button>
+                        <button class="btn btn-info" onclick="saveToLocalStorage()">💾 Save</button>
+                        <button class="btn btn-info" onclick="loadFromLocalStorage()">📂 Load</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>🎨 Severity Legend</h2>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="legend-color info"></span>
+                            <span>Informational (0.0)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color low"></span>
+                            <span>Low (0.1–3.9)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color medium"></span>
+                            <span>Medium (4.0–6.9)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color high"></span>
+                            <span>High (7.0–8.9)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color critical"></span>
+                            <span>Critical (9.0–10.0)</span>
+                        </div>
+                    </div>
+
+                    <div class="risk-indicator">
+                        <h3>🚨 Overall Risk Level</h3>
+                        <div class="risk-badge" id="overallRisk">No Data</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphs Panel -->
+            <div class="panel">
+                <h2>📈 Statistical Analysis & Reports</h2>
+                
+                <div class="graphs-container">
+                    <div class="graph-box">
+                        <h3>Bar Chart - Severity Distribution</h3>
+                        <canvas id="barChart"></canvas>
+                        <button class="btn btn-download" onclick="downloadChart('barChart', 'severity-bar-chart.png')">⬇️ Download</button>
+                    </div>
+
+                    <div class="graph-box">
+                        <h3>Pie Chart - Vulnerability Breakdown</h3>
+                        <canvas id="pieChart"></canvas>
+                        <button class="btn btn-download" onclick="downloadChart('pieChart', 'severity-pie-chart.png')">⬇️ Download</button>
+                    </div>
+
+                    <div class="graph-box">
+                        <h3>Line Chart - Risk Trend Analysis</h3>
+                        <canvas id="lineChart"></canvas>
+                        <button class="btn btn-download" onclick="downloadChart('lineChart', 'risk-trend-chart.png')">⬇️ Download</button>
+                    </div>
+
+                    <div class="graph-box">
+                        <h3>Doughnut Chart - Severity Proportion</h3>
+                        <canvas id="doughnutChart"></canvas>
+                        <button class="btn btn-download" onclick="downloadChart('doughnutChart', 'severity-doughnut-chart.png')">⬇️ Download</button>
+                    </div>
+                </div>
+
+                <!-- Export Section -->
+                <div class="export-section">
+                    <h3 style="text-align: center; margin-bottom: 15px; color: var(--neon-purple);">📸 Screenshot & Export Options</h3>
+                    <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
+                        Take screenshots of specific sections or download the complete dashboard report
+                    </p>
+                    
+                    <div class="screenshot-buttons">
+                        <button class="btn btn-success" onclick="screenshotGraphs()">📸 Screenshot Graphs</button>
+                        <button class="btn btn-success" onclick="screenshotInputSection()">📸 Screenshot Input Panel</button>
+                        <button class="btn btn-export" onclick="downloadFullReport()">📸 Download Full Dashboard</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visitor Counter -->
+    <div class="visitor-counter">
+        <span class="icon">👁️</span>
+        <div>
+            <div class="count" id="visitorCount">0</div>
+            <div class="label">Visitors</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>ℹ️ About ThreatMatrix</h3>
+                    <p>Complete security research platform combining CVSS v3.1 scoring with advanced vulnerability analytics. Created by <strong>Dharmendra Kumar (dharmendrastm)</strong> for security researchers, penetration testers, and bug bounty hunters worldwide.</p>
+                    <div class="footer-tags">
+                        <p><strong>Tags:</strong> dharmendrahacker, dharmendracyberhack, dharmendrastm, cybersecurity, ThreatMatrix, ethical hacking, CVSS calculator, vulnerability assessment, penetration testing, bug bounty, security research</p>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h3>🔗 Quick Links</h3>
+                    <ul class="footer-links-list">
+                        <li><a href="https://dharmendrastm.github.io/PortfolioWebsite/" target="_blank">🌐 Portfolio Website</a></li>
+                        <li><a href="https://github.com/Dharmendrastm" target="_blank">📦 GitHub Profile</a></li>
+                        <li><a href="https://dharmendrastm.medium.com/" target="_blank">📝 Medium Blog</a></li>
+                        <li><a href="https://www.linkedin.com/in/dharmendrastm/" target="_blank">💼 LinkedIn Profile</a></li>
+                        <li><a href="https://dharmendrastm.github.io/SurfaceHunter/" target="_blank">🔍 Surface Hunter Pro</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>👤 Connect With Me</h3>
+                    <p><strong>Dharmendra Kumar</strong><br>Cybersecurity Researcher & Developer</p>
+                    <p style="font-size: 0.9rem; color: var(--neon-blue); margin-bottom: 15px;">dharmendrastm | dharmendrahacker | dharmendracyberhack</p>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/in/dharmendrastm/" target="_blank" title="LinkedIn">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                        </a>
+                        <a href="https://github.com/Dharmendrastm" target="_blank" title="GitHub">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        </a>
+                        <a href="https://x.com/dharmendra_stm" target="_blank" title="Twitter/X">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a href="https://www.youtube.com/@DharmendraCyberHacks" target="_blank" title="YouTube">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                        </a>
+                        <a href="https://www.facebook.com/DharmendraCyberHacks/" target="_blank" title="Facebook">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>
+                        </a>
+                        <a href="https://www.instagram.com/dharmendra_stm/" target="_blank" title="Instagram">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        </a>
+                        <a href="https://dharmendrastm.medium.com/" target="_blank" title="Medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+                        </a>
+                        <a href="https://dharmendrastm.github.io/PortfolioWebsite/" target="_blank" title="Portfolio">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm1 16.057v-3.057h2.994c-.059 1.143-.212 2.24-.456 3.279-.823-.12-1.674-.188-2.538-.222zm1.957 2.162c-.499 1.33-1.159 2.497-1.957 3.456v-3.62c.666.028 1.319.081 1.957.164zm-1.957-7.219v-3.015c.868-.034 1.721-.103 2.548-.224.238 1.027.389 2.111.446 3.239h-2.994zm0-5.014v-3.661c.806.969 1.471 2.15 1.971 3.496-.642.084-1.3.137-1.971.165zm2.703-3.267c1.237.496 2.354 1.228 3.29 2.146-.642.234-1.311.442-2.019.607-.344-.992-.775-1.91-1.271-2.753zm-7.241 13.56c-.244-1.039-.398-2.136-.456-3.279h2.994v3.057c-.865.034-1.714.102-2.538.222zm2.538 1.776v3.62c-.798-.959-1.458-2.126-1.957-3.456.638-.083 1.291-.136 1.957-.164zm-2.994-7.055c.057-1.128.207-2.212.446-3.239.827.121 1.68.19 2.548.224v3.015h-2.994zm1.024-5.179c.5-1.346 1.165-2.527 1.97-3.496v3.661c-.671-.028-1.329-.081-1.97-.165zm-2.005-.35c-.708-.165-1.377-.373-2.018-.607.937-.918 2.053-1.65 3.29-2.146-.496.844-.927 1.762-1.272 2.753zm-.549 1.918c-.264 1.151-.434 2.36-.492 3.611h-3.933c.165-1.658.739-3.197 1.617-4.518.88.361 1.816.67 2.808.907zm.009 9.262c-.988.236-1.92.542-2.797.9-.89-1.328-1.471-2.879-1.637-4.551h3.934c.058 1.265.231 2.488.5 3.651zm.553 1.917c.342.976.768 1.881 1.257 2.712-1.223-.49-2.326-1.211-3.256-2.115.636-.229 1.299-.435 1.999-.597zm9.924 0c.7.163 1.362.367 1.999.597-.931.903-2.034 1.625-3.257 2.116.489-.832.915-1.737 1.258-2.713zm.553-1.917c.27-1.163.442-2.386.501-3.651h3.934c-.167 1.672-.748 3.223-1.638 4.551-.877-.358-1.81-.664-2.797-.9zm.501-5.651c-.058-1.251-.229-2.46-.492-3.611.992-.237 1.929-.546 2.809-.907.877 1.321 1.451 2.86 1.616 4.518h-3.933z"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>© 2025-26 ThreatMatrix | Developed by <strong>Dharmendra Kumar</strong> (dharmendrastm, dharmendrahacker, dharmendracyberhack) | All Rights Reserved</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // CVSS v3.1 Constants
+        const CVSS_WEIGHTS = {
+            AV: { N: 0.85, A: 0.62, L: 0.55, P: 0.2 },
+            AC: { L: 0.77, H: 0.44 },
+            PR_U: { N: 0.85, L: 0.62, H: 0.27 },
+            PR_C: { N: 0.85, L: 0.68, H: 0.50 },
+            UI: { N: 0.85, R: 0.62 },
+            S: { U: 'U', C: 'C' },
+            C: { H: 0.56, L: 0.22, N: 0.0 },
+            I: { H: 0.56, L: 0.22, N: 0.0 },
+            A: { H: 0.56, L: 0.22, N: 0.0 }
+        };
+
+        let selectedMetrics = { AV: null, AC: null, PR: null, UI: null, S: null, C: null, I: null, A: null };
+        let barChartInstance = null;
+        let pieChartInstance = null;
+        let lineChartInstance = null;
+        let doughnutChartInstance = null;
+        let currentCVSSScore = null;
+        let currentCVSSVector = null;
+        let currentSeverity = null;
+
+        // Navigation
+        function switchSection(sectionName) {
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.querySelectorAll('.nav-tab button').forEach(btn => btn.classList.remove('active'));
+
+            const sections = { cvss: 0, dashboard: 1 };
+            document.getElementById(`${sectionName}-section`).classList.add('active');
+            document.querySelectorAll('.nav-tab button')[sections[sectionName]].classList.add('active');
+        }
+
+        // Metric Selection
+        function selectMetric(metric, value, button) {
+            button.parentElement.querySelectorAll('.metric-btn').forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+            selectedMetrics[metric] = value;
+            
+            // Update metrics selected counter
+            const selectedCount = Object.values(selectedMetrics).filter(v => v !== null).length;
+            document.getElementById('metricsSelected').textContent = selectedCount;
+            
+            // Auto-calculate if all metrics are selected
+            if (selectedCount === 8) {
+                calculateCVSS();
+            } else {
+                document.getElementById('totalScorePreview').textContent = '0.0';
+            }
+        }
+
+        // CVSS Calculation
+        function calculateCVSS() {
+            for (let metric in selectedMetrics) {
+                if (selectedMetrics[metric] === null) {
+                    alert('⚠️ Please select values for all metrics!');
+                    return;
+                }
+            }
+
+            const { AV, AC, PR, UI, S, C, I, A } = selectedMetrics;
+            const av_weight = CVSS_WEIGHTS.AV[AV];
+            const ac_weight = CVSS_WEIGHTS.AC[AC];
+            const pr_weight = S === 'C' ? CVSS_WEIGHTS.PR_C[PR] : CVSS_WEIGHTS.PR_U[PR];
+            const ui_weight = CVSS_WEIGHTS.UI[UI];
+            const c_weight = CVSS_WEIGHTS.C[C];
+            const i_weight = CVSS_WEIGHTS.I[I];
+            const a_weight = CVSS_WEIGHTS.A[A];
+
+            const ISS = 1 - ((1 - c_weight) * (1 - i_weight) * (1 - a_weight));
+            let impact = S === 'U' ? 6.42 * ISS : 7.52 * (ISS - 0.029) - 3.25 * Math.pow(ISS - 0.02, 15);
+            const exploitability = 8.22 * av_weight * ac_weight * pr_weight * ui_weight;
+
+            let baseScore;
+            if (impact <= 0) {
+                baseScore = 0.0;
+            } else {
+                baseScore = S === 'U' ? Math.min(impact + exploitability, 10) : Math.min(1.08 * (impact + exploitability), 10);
+            }
+            baseScore = Math.ceil(baseScore * 10) / 10;
+
+            let severity, riskMessage;
+            if (baseScore === 0.0) {
+                severity = 'none';
+                riskMessage = 'None - No vulnerability detected.';
+            } else if (baseScore <= 3.9) {
+                severity = 'low';
+                riskMessage = 'Low - Minor security concerns.';
+            } else if (baseScore <= 6.9) {
+                severity = 'medium';
+                riskMessage = 'Medium - Moderate security issue.';
+            } else if (baseScore <= 8.9) {
+                severity = 'high';
+                riskMessage = 'High - Significant vulnerability.';
+            } else {
+                severity = 'critical';
+                riskMessage = 'CRITICAL - Severe vulnerability!';
+            }
+
+            const vectorString = `CVSS:3.1/AV:${AV}/AC:${AC}/PR:${PR}/UI:${UI}/S:${S}/C:${C}/I:${I}/A:${A}`;
+            
+            // Store current values for copying
+            currentCVSSScore = baseScore.toFixed(1);
+            currentCVSSVector = vectorString;
+            currentSeverity = severity.toUpperCase();
+            
+            displayCVSSResult(baseScore, severity, riskMessage, vectorString);
+        }
+
+        function displayCVSSResult(score, severity, message, vector) {
+            document.getElementById('cvssResult').classList.remove('hidden');
+            document.getElementById('scoreNumber').textContent = score.toFixed(1);
+            document.getElementById('severityBadge').textContent = severity.toUpperCase();
+            document.getElementById('severityBadge').className = 'severity-badge ' + severity;
+            document.getElementById('riskMessage').textContent = message;
+            document.getElementById('cvssVector').textContent = vector;
+            
+            // Update preview score
+            document.getElementById('totalScorePreview').textContent = score.toFixed(1);
+        }
+
+        // Copy Functions
+        function copyCVSSScore() {
+            if (!currentCVSSScore) {
+                alert('⚠️ Please calculate CVSS score first!');
+                return;
+            }
+            copyToClipboard(currentCVSSScore, 'CVSS Score');
+        }
+
+        function screenshotCVSSResult() {
+            const cvssResult = document.getElementById('cvssResult');
+            if (cvssResult.classList.contains('hidden')) {
+                alert('⚠️ Please calculate CVSS score first!');
+                return;
+            }
+            takeScreenshot(cvssResult, 'cvss-score-result.png');
+        }
+
+        function copyToClipboard(text, label) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`✅ ${label} copied to clipboard!`);
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                alert('⚠️ Failed to copy. Please try again.');
+            });
+        }
+
+        // Dashboard Functions
+        function updateTotals() {
+            const info = parseInt(document.getElementById('infoCount').value) || 0;
+            const low = parseInt(document.getElementById('lowCount').value) || 0;
+            const medium = parseInt(document.getElementById('mediumCount').value) || 0;
+            const high = parseInt(document.getElementById('highCount').value) || 0;
+            const critical = parseInt(document.getElementById('criticalCount').value) || 0;
+            const total = info + low + medium + high + critical;
+
+            document.getElementById('totalVulns').textContent = total;
+
+            if (total > 0) {
+                const percentages = {
+                    'Informational': ((info / total) * 100).toFixed(1),
+                    'Low': ((low / total) * 100).toFixed(1),
+                    'Medium': ((medium / total) * 100).toFixed(1),
+                    'High': ((high / total) * 100).toFixed(1),
+                    'Critical': ((critical / total) * 100).toFixed(1)
+                };
+
+                let html = '';
+                for (let [severity, percent] of Object.entries(percentages)) {
+                    html += `<div class="percentage-item"><span>${severity}:</span><span style="color: var(--neon-${severity.toLowerCase()});">${percent}%</span></div>`;
+                }
+                document.getElementById('percentageBreakdown').innerHTML = html;
+
+                updateOverallRisk(critical, high, medium, low, info);
+            } else {
+                document.getElementById('percentageBreakdown').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No data yet</p>';
+                document.getElementById('overallRisk').textContent = 'No Data';
+            }
+        }
+
+        function updateOverallRisk(critical, high, medium, low, info) {
+            const riskBadge = document.getElementById('overallRisk');
+            let riskLevel, riskColor;
+
+            if (critical > 0) {
+                riskLevel = 'CRITICAL RISK';
+                riskColor = 'var(--critical)';
+            } else if (high > 0) {
+                riskLevel = 'HIGH RISK';
+                riskColor = 'var(--high)';
+            } else if (medium > 0) {
+                riskLevel = 'MEDIUM RISK';
+                riskColor = 'var(--medium)';
+            } else if (low > 0) {
+                riskLevel = 'LOW RISK';
+                riskColor = 'var(--low)';
+            } else {
+                riskLevel = 'MINIMAL RISK';
+                riskColor = 'var(--info)';
+            }
+
+            riskBadge.textContent = riskLevel;
+            riskBadge.style.background = riskColor;
+            riskBadge.style.border = `2px solid ${riskColor}`;
+            riskBadge.style.color = '#fff';
+            riskBadge.style.boxShadow = `0 0 20px ${riskColor}`;
+        }
+
+        function generateGraphs() {
+            const data = {
+                labels: ['Informational', 'Low', 'Medium', 'High', 'Critical'],
+                counts: [
+                    parseInt(document.getElementById('infoCount').value) || 0,
+                    parseInt(document.getElementById('lowCount').value) || 0,
+                    parseInt(document.getElementById('mediumCount').value) || 0,
+                    parseInt(document.getElementById('highCount').value) || 0,
+                    parseInt(document.getElementById('criticalCount').value) || 0
+                ],
+                colors: ['rgba(23, 162, 184, 0.8)', 'rgba(40, 167, 69, 0.8)', 'rgba(255, 193, 7, 0.8)', 'rgba(253, 126, 20, 0.8)', 'rgba(220, 53, 69, 0.8)'],
+                borderColors: ['rgba(23, 162, 184, 1)', 'rgba(40, 167, 69, 1)', 'rgba(255, 193, 7, 1)', 'rgba(253, 126, 20, 1)', 'rgba(220, 53, 69, 1)']
+            };
+
+            if (data.counts.reduce((a, b) => a + b, 0) === 0) {
+                alert('⚠️ Please enter vulnerability counts first!');
+                return;
+            }
+
+            if (barChartInstance) barChartInstance.destroy();
+            if (pieChartInstance) pieChartInstance.destroy();
+            if (lineChartInstance) lineChartInstance.destroy();
+            if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: true,
+                animation: { duration: 1500, easing: 'easeInOutQuart' },
+                plugins: {
+                    legend: { 
+                        labels: { 
+                            color: '#e0e6ed', 
+                            font: { size: 16 },
+                            padding: 20
+                        } 
+                    },
+                    tooltip: { 
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)', 
+                        titleColor: '#00d4ff', 
+                        bodyColor: '#e0e6ed', 
+                        borderColor: '#00d4ff', 
+                        borderWidth: 1,
+                        titleFont: { size: 16 },
+                        bodyFont: { size: 14 },
+                        padding: 12
+                    }
+                }
+            };
+
+            barChartInstance = new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: { labels: data.labels, datasets: [{ label: 'Count', data: data.counts, backgroundColor: data.colors, borderColor: data.borderColors, borderWidth: 2 }] },
+                options: { 
+                    ...commonOptions, 
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { 
+                                color: '#a8b2d1',
+                                font: { size: 14 }
+                            }, 
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            title: {
+                                display: true,
+                                text: 'Vulnerability Count',
+                                color: '#e0e6ed',
+                                font: { size: 16, weight: 'bold' }
+                            }
+                        }, 
+                        x: { 
+                            ticks: { 
+                                color: '#a8b2d1',
+                                font: { size: 14 }
+                            }, 
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            title: {
+                                display: true,
+                                text: 'Severity Level',
+                                color: '#e0e6ed',
+                                font: { size: 16, weight: 'bold' }
+                            }
+                        } 
+                    } 
+                }
+            });
+
+            pieChartInstance = new Chart(document.getElementById('pieChart'), {
+                type: 'pie',
+                data: { labels: data.labels, datasets: [{ data: data.counts, backgroundColor: data.colors, borderColor: data.borderColors, borderWidth: 2 }] },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#e0e6ed',
+                                font: { size: 14 },
+                                padding: 20,
+                                boxWidth: 20,
+                                boxHeight: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#00d4ff',
+                            bodyColor: '#e0e6ed',
+                            borderColor: '#00d4ff',
+                            borderWidth: 1,
+                            titleFont: { size: 16 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.parsed || 0;
+                                    let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    let percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            lineChartInstance = new Chart(document.getElementById('lineChart'), {
+                type: 'line',
+                data: { labels: data.labels, datasets: [{ label: 'Risk Trend', data: data.counts, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,0.1)', borderWidth: 3, fill: true, tension: 0.4, pointBackgroundColor: data.colors, pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 8, pointHoverRadius: 10 }] },
+                options: { 
+                    ...commonOptions, 
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { 
+                                color: '#a8b2d1',
+                                font: { size: 14 }
+                            }, 
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            title: {
+                                display: true,
+                                text: 'Count',
+                                color: '#e0e6ed',
+                                font: { size: 16, weight: 'bold' }
+                            }
+                        }, 
+                        x: { 
+                            ticks: { 
+                                color: '#a8b2d1',
+                                font: { size: 14 }
+                            }, 
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            title: {
+                                display: true,
+                                text: 'Severity Level',
+                                color: '#e0e6ed',
+                                font: { size: 16, weight: 'bold' }
+                            }
+                        } 
+                    } 
+                }
+            });
+
+            doughnutChartInstance = new Chart(document.getElementById('doughnutChart'), {
+                type: 'doughnut',
+                data: { labels: data.labels, datasets: [{ data: data.counts, backgroundColor: data.colors, borderColor: data.borderColors, borderWidth: 2 }] },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'right',
+                            labels: {
+                                color: '#e0e6ed',
+                                font: { size: 14 },
+                                padding: 20,
+                                boxWidth: 20,
+                                boxHeight: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#00d4ff',
+                            bodyColor: '#e0e6ed',
+                            borderColor: '#00d4ff',
+                            borderWidth: 1,
+                            titleFont: { size: 16 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.parsed || 0;
+                                    let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    let percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '50%'
+                }
+            });
+
+            document.querySelector('.graphs-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadChart(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                alert('⚠️ Generate graphs first!');
+                return;
+            }
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Screenshot Functions
+        function screenshotGraphs() {
+            const graphsContainer = document.querySelector('.graphs-container');
+            if (!graphsContainer) {
+                alert('⚠️ No graphs found!');
+                return;
+            }
+            takeScreenshot(graphsContainer, 'vulnerability-graphs.png');
+        }
+
+        function screenshotInputSection() {
+            const inputPanel = document.querySelector('.dashboard-grid');
+            if (!inputPanel) {
+                alert('⚠️ Section not found!');
+                return;
+            }
+            takeScreenshot(inputPanel, 'vulnerability-input-section.png');
+        }
+
+        function downloadFullReport() {
+            const dashboardSection = document.getElementById('dashboard-section');
+            takeScreenshot(dashboardSection, 'vulnerability-dashboard-report.png');
+        }
+
+        function takeScreenshot(element, filename) {
+            // Scroll element into view first
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Wait for scroll to complete
+            setTimeout(() => {
+                html2canvas(element, {
+                    backgroundColor: '#0a0e27',
+                    scale: 2,
+                    logging: false,
+                    useCORS: true,
+                    windowWidth: element.scrollWidth,
+                    windowHeight: element.scrollHeight,
+                    scrollY: -window.scrollY,
+                    scrollX: -window.scrollX
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    alert(`✅ Screenshot saved as ${filename}`);
+                }).catch(error => {
+                    console.error('Screenshot error:', error);
+                    alert('⚠️ Error taking screenshot. Please try again.');
+                });
+            }, 500);
+        }
+
+        function saveToLocalStorage() {
+            const data = {
+                info: document.getElementById('infoCount').value,
+                low: document.getElementById('lowCount').value,
+                medium: document.getElementById('mediumCount').value,
+                high: document.getElementById('highCount').value,
+                critical: document.getElementById('criticalCount').value,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('vulnerabilityReport', JSON.stringify(data));
+            alert('💾 Report saved successfully!');
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('vulnerabilityReport');
+            if (!savedData) {
+                alert('⚠️ No saved report found!');
+                return;
+            }
+            const data = JSON.parse(savedData);
+            document.getElementById('infoCount').value = data.info;
+            document.getElementById('lowCount').value = data.low;
+            document.getElementById('mediumCount').value = data.medium;
+            document.getElementById('highCount').value = data.high;
+            document.getElementById('criticalCount').value = data.critical;
+            updateTotals();
+            alert(`✅ Report loaded!\nSaved: ${new Date(data.timestamp).toLocaleString()}`);
+        }
+
+        function resetDashboard() {
+            if (!confirm('🔄 Reset dashboard data?')) return;
+            document.getElementById('infoCount').value = 0;
+            document.getElementById('lowCount').value = 0;
+            document.getElementById('mediumCount').value = 0;
+            document.getElementById('highCount').value = 0;
+            document.getElementById('criticalCount').value = 0;
+            if (barChartInstance) barChartInstance.destroy();
+            if (pieChartInstance) pieChartInstance.destroy();
+            if (lineChartInstance) lineChartInstance.destroy();
+            if (doughnutChartInstance) doughnutChartInstance.destroy();
+            updateTotals();
+            alert('✅ Dashboard reset!');
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            updateTotals();
+            initVisitorCounter();
+            console.log('🔐 ThreatMatrix - CVSS v3.1 Platform Ready!');
+        });
+
+        // Visitor Counter
+        function initVisitorCounter() {
+            let count = localStorage.getItem('visitorCount');
+            if (!count) {
+                count = Math.floor(Math.random() * 500) + 100; // Start with random count
+            }
+            count = parseInt(count) + 1;
+            localStorage.setItem('visitorCount', count);
+            document.getElementById('visitorCount').textContent = count.toLocaleString();
+        }
+    </script>
+</body>
+</html>
