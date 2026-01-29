@@ -1192,8 +1192,8 @@
                     
                     <!-- Copy Buttons -->
                     <div class="copy-buttons">
-                        <button class="btn-copy" onclick="copyCVSSScore()">
-                            📋 Copy CVSS Score
+                        <button class="btn-copy" onclick="copyCVSSValue()">
+                            📋 Copy CVSS Value
                         </button>
                         <button class="btn-copy" onclick="screenshotCVSSResult()">
                             📸 Screenshot Result
@@ -1548,13 +1548,21 @@
             document.getElementById('totalScorePreview').textContent = score.toFixed(1);
         }
 
-        // Copy Functions
-        function copyCVSSScore() {
-            if (!currentCVSSScore) {
+        // Copy CVSS Value Function
+        function copyCVSSValue() {
+            if (!currentCVSSScore || !currentCVSSVector) {
                 alert('⚠️ Please calculate CVSS score first!');
                 return;
             }
-            copyToClipboard(currentCVSSScore, 'CVSS Score');
+            
+            const cvssText = `CVSS Score: ${currentCVSSScore}/10\n${currentCVSSVector}`;
+            
+            navigator.clipboard.writeText(cvssText).then(() => {
+                alert('✅ CVSS value copied to clipboard!');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                alert('⚠️ Failed to copy. Please try again.');
+            });
         }
 
         function screenshotCVSSResult() {
