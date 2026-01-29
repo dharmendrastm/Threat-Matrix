@@ -163,7 +163,7 @@ Open `ThreatMatrix.html` in your browser.
 
 ### Option 3: GitHub Pages (Live Demo)
 
-Visit: [https://dharmendrastm.github.io/ThreatMatrix](https://dharmendrastm.github.io/ThreatMatrix)
+Visit: [https://dharmendrastm.github.io/ThreatMatrix](https://dharmendrastm.github.io/Threat-Matrix)
 
 ---
 
